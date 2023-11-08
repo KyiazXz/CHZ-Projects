@@ -13,7 +13,32 @@ export function useBalances() {
     const [nativeBalance, setNativeBalance] = useState<NativeBalance>();
     const { address } = useAppContext();
 
-    const fetchTokenBalance = useCallback(async () => {}, []);
+    const fetchTokenBalance = useCallback(async () => {
+        try {
+            if (!address) return 
+            if (!Moralis.Core.isStarted){
+                await Moralis.start({apiKey})
+            }
+            const token_balances = await Moralis.EvmApi.token.getWalletTokenBalances({
+                address, 
+                chain:current_chain
+            })
+            setTokenBalances(token_balances.toJSON)
+    
+        const native_balance = await Moralis.EvmApi.balance.getNativeBalance({
+            address,
+            chain: current_chain,
+        })
+        setNativeBalance(native_balance.toJSON)
+    }
+        catch (error){
+            console.log("Error fethcing token balances: " , error)
+            setMessage("Error fethcing token balances:" )
+           
+        }finally{
+            setLoading(false)
+        }
+    }, []);
 
     useEffect(() => {
         fetchTokenBalance();
